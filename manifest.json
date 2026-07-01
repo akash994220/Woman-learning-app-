@@ -1,0 +1,19 @@
+{
+  "name": "প্রশান্তি — নারীদের সুস্থতার সঙ্গী",
+  "short_name": "প্রশান্তি",
+  "description": "মানসিক, শারীরিক ও আধ্যাত্মিক সুস্থতা, শেখা ও কমিউনিটি — নারীদের জন্য একটি নিরাপদ সহযাত্রী।",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F6",
+  "theme_color": "#B86F5E",
+  "lang": "bn",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
