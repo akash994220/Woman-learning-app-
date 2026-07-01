@@ -859,6 +859,7 @@
       await signInWithEmailAndPassword(auth, usernameToEmail(username), loginPassword.value);
       closeAuthScreen();
     }catch(err){
+      console.error('Login failed:', err && err.code, err);
       errEl.textContent = friendlyAuthError(err.code);
     }finally{ btn.disabled = false; }
   });
@@ -870,6 +871,13 @@
     errEl.textContent = '';
     btn.disabled = true;
     try{
+      // Firestore rules require an authenticated request. Since guest
+      // sessions are no longer started automatically on load, make sure
+      // *some* session exists before the uniqueness check below runs.
+      if(!auth.currentUser){
+        await signInAnonymously(auth);
+      }
+
       const name = regName.value.trim();
       const username = normalizeUsername(regUsername.value);
       const password = regPassword.value;
@@ -903,6 +911,7 @@
 
       closeAuthScreen();
     }catch(err){
+      console.error('Registration failed:', err && err.code, err);
       errEl.textContent = friendlyAuthError(err.code);
     }finally{ btn.disabled = false; }
   });
@@ -929,7 +938,8 @@
       'auth/credential-already-in-use': 'এই ইউজারনেমটি আগে থেকেই ব্যবহার হচ্ছে',
       'auth/weak-password': 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে',
       'custom/username-taken': 'এই ইউজারনেমটি আগে থেকেই নেওয়া হয়েছে',
-      'custom/short-username': 'ইউজারনেম কমপক্ষে ৩ অক্ষরের হতে হবে'
+      'custom/short-username': 'ইউজারনেম কমপক্ষে ৩ অক্ষরের হতে হবে',
+      'permission-denied': 'Firestore নিয়মের কারণে অনুমতি পাওয়া যায়নি — Firestore Rules চেক করুন'
     };
     return map[code] || 'কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন';
   }
