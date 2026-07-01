@@ -937,15 +937,12 @@
   /* ---------------- AUTH STATE ---------------- */
   onAuthStateChanged(auth, async (user) => {
     if(!user){
-      // no session at all (first launch, or just signed out) — start a
-      // silent guest session. No form, no typing, app opens instantly.
-      try{ await signInAnonymously(auth); }
-      catch(e){
-        console.error('Anonymous sign-in failed:', e);
-        splash.style.display = 'flex';
-        showSplashError('অ্যাপ চালু করা যায়নি — Firebase কনফিগারেশন চেক করুন (config এখনো বসানো হয়নি, অথবা Anonymous sign-in চালু করা নেই)। কোড: ' + (e && e.code ? e.code : 'unknown'));
-      }
-      return; // onAuthStateChanged fires again once the guest session exists
+      // no session at all (first launch, or just signed out) — show the
+      // sign-in screen and let the person choose: log in, register, or
+      // continue as guest (guestSkipBtn starts the anonymous session).
+      splash.style.display = 'none';
+      openAuthScreen('login');
+      return; // onAuthStateChanged fires again once a session (guest or real) exists
     }
 
     splash.style.display = 'none';
