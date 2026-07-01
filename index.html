@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#FAF8F6">
+<title>প্রশান্তি</title>
+
+<!-- Bangla + Latin type pairing: Tiro Bangla for display warmth, Noto Sans Bengali for clean body reading -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     DESIGN TOKENS
+     ============================================================ */
+  :root{
+    --bg:#FAF8F6;
+    --surface:#FFFFFF;
+    --surface-raised:#FFFFFF;
+    --ink:#1C1B1F;
+    --ink-soft:#5B5852;
+    --muted:#9C968D;
+    --hairline:rgba(28,27,31,0.08);
+    --accent:#B86F5E;        /* warm terracotta-rose — primary */
+    --accent-ink:#FFFFFF;
+    --accent-soft:#F3E3DE;
+    --teal:#3D5A57;          /* deep sage teal — spiritual / trust */
+    --teal-soft:#E2EAE8;
+    --gold:#C9A24B;          /* used sparingly: streaks, completion */
+    --danger:#B3463E;
+    --shadow-sm:0 1px 2px rgba(28,27,31,0.06);
+    --shadow-md:0 8px 24px rgba(28,27,31,0.08);
+    --shadow-lg:0 16px 40px rgba(28,27,31,0.14);
+    --radius:16px;
+    --radius-lg:22px;
+    --radius-pill:999px;
+    --font-display:'Tiro Bangla', 'Noto Sans Bengali', serif;
+    --font-body:'Noto Sans Bengali', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --safe-top:env(safe-area-inset-top, 0px);
+    --safe-bottom:env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+  }
+  [data-theme="dark"]{
+    --bg:#121214;
+    --surface:#1C1C1F;
+    --surface-raised:#232326;
+    --ink:#F2F0ED;
+    --ink-soft:#B8B3AC;
+    --muted:#716C66;
+    --hairline:rgba(255,255,255,0.08);
+    --accent:#D98A77;
+    --accent-ink:#1C1B1F;
+    --accent-soft:#2E2320;
+    --teal:#6E9C97;
+    --teal-soft:#1E2926;
+    --gold:#D8B563;
+    --danger:#E0837A;
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md:0 8px 24px rgba(0,0,0,0.35);
+    --shadow-lg:0 16px 40px rgba(0,0,0,0.5);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3,.display{ font-family:var(--font-display); font-weight:400; letter-spacing:0.01em; }
+  button{ font-family:inherit; }
+  input, select, textarea{ font-family:inherit; font-size:16px; } /* 16px prevents iOS zoom-on-focus */
+
+  /* respect reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ============================================================
+     SIGNATURE ELEMENT — the "ripple ring"
+     Used for: splash loader, breathing exercise, progress rings,
+     active-tab indicator. One motif, reused with restraint, ties
+     mental / physical / spiritual sections together visually.
+     ============================================================ */
+  .ripple-ring{
+    position:relative;
+    width:64px; height:64px;
+  }
+  .ripple-ring span{
+    position:absolute; inset:0;
+    border-radius:50%;
+    border:1.5px solid var(--accent);
+    opacity:0;
+    animation:ripple 2.8s ease-out infinite;
+  }
+  .ripple-ring span:nth-child(2){ animation-delay:0.9s; }
+  .ripple-ring span:nth-child(3){ animation-delay:1.8s; }
+  @keyframes ripple{
+    0%{ transform:scale(0.5); opacity:0.55; }
+    100%{ transform:scale(1.15); opacity:0; }
+  }
+
+  /* ============================================================
+     SPLASH / LOADER
+     ============================================================ */
+  #splash{
+    position:fixed; inset:0; z-index:100;
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px;
+  }
+  #splash .ripple-ring{ width:88px; height:88px; }
+  #splash .ripple-ring span{ border-color:var(--accent); }
+  #splash .splash-word{ font-family:var(--font-display); font-size:22px; color:var(--ink-soft); }
+  #splash .splash-error{ display:none; max-width:300px; text-align:center; font-size:13px; color:var(--danger); line-height:1.6; }
+
+  /* ============================================================
+     AUTH SCREEN
+     ============================================================ */
+  #authScreen{
+    position:fixed; inset:0; z-index:50;
+    display:none;
+    flex-direction:column;
+    background:var(--bg);
+    padding:calc(var(--safe-top) + 32px) 24px calc(var(--safe-bottom) + 24px);
+    overflow-y:auto;
+  }
+  #authScreen.visible{ display:flex; }
+  .auth-card{
+    max-width:420px; margin:auto; width:100%; position:relative;
+  }
+  .auth-brand{ text-align:center; margin-bottom:36px; }
+  .auth-brand h1{ font-size:34px; margin:14px 0 6px; }
+  .auth-brand p{ color:var(--ink-soft); font-size:15px; margin:0; }
+  .auth-tabs{
+    display:flex; background:var(--surface); border-radius:var(--radius-pill);
+    padding:4px; margin-bottom:24px; box-shadow:var(--shadow-sm);
+  }
+  .auth-tab{
+    flex:1; text-align:center; padding:10px 0; border:none; background:transparent;
+    border-radius:var(--radius-pill); font-size:14px; font-weight:600; color:var(--ink-soft);
+    cursor:pointer; transition:.2s;
+  }
+  .auth-tab.active{ background:var(--accent); color:var(--accent-ink); }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:13px; color:var(--ink-soft); margin-bottom:6px; font-weight:500; }
+  .field input{
+    width:100%; padding:14px 16px; border-radius:var(--radius);
+    border:1px solid var(--hairline); background:var(--surface); color:var(--ink);
+    outline:none; transition:border-color .2s;
+  }
+  .field input:focus{ border-color:var(--accent); }
+  .btn-primary{
+    width:100%; padding:15px; border:none; border-radius:var(--radius);
+    background:var(--accent); color:var(--accent-ink); font-size:16px; font-weight:600;
+    cursor:pointer; margin-top:6px; box-shadow:var(--shadow-sm);
+  }
+  .btn-primary:active{ transform:scale(0.98); }
+  .btn-primary[disabled]{ opacity:0.6; }
+  .auth-error{ color:var(--danger); font-size:13px; margin-top:10px; min-height:16px; }
+  .auth-foot{ text-align:center; margin-top:22px; font-size:13px; color:var(--muted); }
+  .auth-guest-link{
+    display:block; width:100%; text-align:center; background:none; border:none;
+    color:var(--accent); font-size:14px; font-weight:600; margin-top:16px;
+    cursor:pointer; text-decoration:underline; text-underline-offset:3px;
+  }
+
+  /* focus visibility for keyboard users */
+  a:focus-visible, button:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+
+  /* ============================================================
+     APP SHELL
+     ============================================================ */
+  #appShell{ display:none; min-height:100%; flex-direction:column; }
+  #appShell.visible{ display:flex; }
+
+  header.topbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:calc(var(--safe-top) + 14px) 18px 14px;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--hairline);
+  }
+  header.topbar h2{ font-size:19px; margin:0; }
+  .icon-btn{
+    width:40px; height:40px; border-radius:var(--radius-pill);
+    border:none; background:var(--surface); display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow-sm); cursor:pointer; color:var(--ink);
+  }
+  .icon-btn svg{ width:20px; height:20px; }
+
+  main#screenContainer{
+    flex:1; overflow-y:auto; padding:18px 18px calc(var(--safe-bottom) + 100px);
+  }
+  .screen{ display:none; animation:fadeIn .25s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:none;} }
+
+  .screen-title{ font-size:26px; margin:4px 0 4px; }
+  .screen-sub{ color:var(--ink-soft); font-size:14px; margin:0 0 22px; }
+
+  .card{
+    background:var(--surface); border-radius:var(--radius-lg);
+    padding:20px; box-shadow:var(--shadow-sm); margin-bottom:14px;
+    border:1px solid var(--hairline);
+  }
+  .placeholder-card{
+    text-align:center; padding:40px 20px; color:var(--muted); font-size:14px;
+  }
+  .placeholder-card .ripple-ring{ margin:0 auto 16px; width:48px; height:48px; }
+
+  /* ============================================================
+     HOME — CHECK-IN CARD
+     ============================================================ */
+  .card-label{ font-size:13px; font-weight:600; color:var(--ink-soft); margin:0 0 12px; }
+  .mood-row{ display:flex; justify-content:space-between; gap:8px; }
+  .mood-btn{
+    flex:1; aspect-ratio:1; border-radius:50%; border:1.5px solid var(--hairline);
+    background:var(--bg); font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:.2s;
+  }
+  .mood-btn.selected{ border-color:var(--accent); background:var(--accent-soft); transform:scale(1.08); }
+  .mood-note{ text-align:center; font-size:13px; color:var(--muted); margin-top:12px; min-height:16px; }
+
+  .water-row{ display:flex; align-items:center; justify-content:space-between; }
+  .water-count{ font-family:var(--font-display); font-size:28px; }
+  .water-count span{ font-size:14px; color:var(--muted); font-family:var(--font-body); }
+  .btn-round{
+    width:44px; height:44px; border-radius:50%; border:none; background:var(--accent);
+    color:var(--accent-ink); font-size:22px; cursor:pointer; box-shadow:var(--shadow-sm); line-height:0;
+  }
+  .btn-round:active{ transform:scale(0.94); }
+  .water-drops{ display:flex; gap:5px; margin-top:12px; flex-wrap:wrap; }
+  .water-drop{ width:14px; height:18px; border-radius:50% 50% 50% 0; transform:rotate(45deg); background:var(--hairline); }
+  .water-drop.filled{ background:var(--teal); }
+
+  .streak-pill{
+    display:inline-flex; align-items:center; gap:6px; background:var(--gold); color:#3a2e0f;
+    padding:6px 14px; border-radius:var(--radius-pill); font-size:13px; font-weight:600; margin-top:4px;
+  }
+
+  /* ============================================================
+     ANALYTICS
+     ============================================================ */
+  .ring-gauge{
+    width:120px; height:120px; border-radius:50%; margin:0 auto 14px;
+    display:flex; align-items:center; justify-content:center;
+    background:conic-gradient(var(--teal) calc(var(--pct,0)*1%), var(--hairline) 0);
+  }
+  .ring-gauge-inner{
+    width:92px; height:92px; border-radius:50%; background:var(--surface);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .ring-gauge-inner b{ font-size:20px; }
+  .ring-gauge-inner span{ font-size:11px; color:var(--muted); }
+
+  .week-bars{ display:flex; justify-content:space-between; align-items:flex-end; height:90px; margin-top:6px; }
+  .week-bar-col{ display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; height:100%; justify-content:flex-end; }
+  .week-bar{ width:14px; border-radius:6px; background:var(--accent-soft); min-height:4px; }
+  .week-bar.has-entry{ background:var(--accent); }
+  .week-bar-label{ font-size:10px; color:var(--muted); }
+
+  /* ============================================================
+     HEALTH HUB + SUB-SCREENS
+     ============================================================ */
+  .pillar-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .pillar-card{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:var(--radius-lg);
+    padding:18px 14px; text-align:center; cursor:pointer; box-shadow:var(--shadow-sm);
+  }
+  .pillar-card .pillar-icon{ font-size:28px; margin-bottom:8px; }
+  .pillar-card .pillar-name{ font-size:14px; font-weight:600; }
+  .pillar-card .pillar-sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+  .subscreen-back{
+    display:inline-flex; align-items:center; gap:6px; background:none; border:none;
+    color:var(--ink-soft); font-size:14px; cursor:pointer; padding:0; margin-bottom:10px;
+  }
+
+  .accordion-item{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:var(--radius-md);
+    margin-bottom:10px; overflow:hidden;
+  }
+  .accordion-head{
+    width:100%; text-align:right; display:flex; justify-content:space-between; align-items:center;
+    padding:14px 16px; background:none; border:none; cursor:pointer; font-size:14px; font-weight:600; color:var(--ink);
+  }
+  .accordion-head .chev{ transition:transform .2s; color:var(--muted); }
+  .accordion-item.open .accordion-head .chev{ transform:rotate(180deg); }
+  .accordion-body{ max-height:0; overflow:hidden; transition:max-height .25s ease; }
+  .accordion-item.open .accordion-body{ max-height:400px; }
+  .accordion-body p{ padding:0 16px 16px; font-size:13px; color:var(--ink-soft); line-height:1.7; margin:0; }
+
+  .cycle-day-box{ text-align:center; padding:10px 0 18px; }
+  .cycle-day-box b{ font-family:var(--font-display); font-size:34px; display:block; }
+  .cycle-day-box span{ font-size:12px; color:var(--muted); }
+  .cycle-field{ margin-bottom:12px; }
+  .cycle-field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:5px; }
+  .cycle-field input{
+    width:100%; padding:11px 12px; border-radius:var(--radius-sm); border:1px solid var(--hairline);
+    background:var(--bg); font-size:14px; font-family:inherit; color:var(--ink);
+  }
+  .cycle-predict{
+    display:flex; justify-content:space-between; background:var(--accent-soft); border-radius:var(--radius-md);
+    padding:12px 14px; margin-top:4px; font-size:13px;
+  }
+  .cycle-predict b{ display:block; font-size:15px; margin-top:2px; }
+  .shortcut-row{ display:flex; align-items:center; justify-content:space-between; }
+  .shortcut-row button{
+    background:var(--accent); color:var(--accent-ink); border:none; border-radius:var(--radius-pill);
+    padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+
+  /* ============================================================
+     BOTTOM NAVIGATION
+     ============================================================ */
+  nav.bottom-nav{
+    position:fixed; left:0; right:0; bottom:0; z-index:20;
+    display:flex;
+    background:color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-top:1px solid var(--hairline);
+    padding:8px 6px calc(var(--safe-bottom) + 6px);
+  }
+  .nav-item{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    border:none; background:transparent; padding:6px 0; cursor:pointer;
+    color:var(--muted); font-size:11px; font-weight:500; position:relative;
+  }
+  .nav-item svg{ width:22px; height:22px; }
+  .nav-item.active{ color:var(--accent); }
+  .nav-item.active::before{
+    content:''; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+    width:4px; height:4px; border-radius:50%; background:var(--accent);
+  }
+
+  /* ============================================================
+     DRAWER
+     ============================================================ */
+  #drawerOverlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:30;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  #drawerOverlay.visible{ opacity:1; pointer-events:auto; }
+  #drawer{
+    position:fixed; top:0; right:0; bottom:0; width:78%; max-width:320px; z-index:31;
+    background:var(--surface); box-shadow:var(--shadow-lg);
+    transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    padding:calc(var(--safe-top) + 24px) 22px calc(var(--safe-bottom) + 24px);
+    display:flex; flex-direction:column;
+  }
+  #drawer.visible{ transform:translateX(0); }
+  .drawer-profile{ display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+  .drawer-avatar{
+    width:48px; height:48px; border-radius:50%; background:var(--accent-soft);
+    display:flex; align-items:center; justify-content:center; color:var(--accent); font-weight:600; font-size:18px;
+  }
+  .drawer-name{ font-weight:600; font-size:15px; }
+  .drawer-email{ font-size:12px; color:var(--muted); }
+  .drawer-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 2px; border-bottom:1px solid var(--hairline); font-size:14px; cursor:pointer;
+  }
+  .drawer-row:last-of-type{ border-bottom:none; }
+  .toggle{
+    width:46px; height:28px; border-radius:var(--radius-pill); background:var(--hairline);
+    position:relative; cursor:pointer; border:none; flex-shrink:0;
+  }
+  .toggle::after{
+    content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%;
+    background:var(--surface); box-shadow:var(--shadow-sm); transition:transform .2s ease;
+  }
+  .toggle.on{ background:var(--accent); }
+  .toggle.on::after{ transform:translateX(18px); background:#fff; }
+  .drawer-spacer{ flex:1; }
+  .btn-signout{
+    width:100%; padding:13px; border-radius:var(--radius); border:1px solid var(--hairline);
+    background:transparent; color:var(--danger); font-weight:600; font-size:14px; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SPLASH
+     ============================================================ -->
+<div id="splash">
+  <div class="ripple-ring"><span></span><span></span><span></span></div>
+  <div class="splash-word">প্রশান্তি</div>
+  <div class="splash-error" id="splashError"></div>
+</div>
+
+<!-- ============================================================
+     AUTH SCREEN
+     ============================================================ -->
+<div id="authScreen">
+  <div class="auth-card">
+    <button class="icon-btn" id="authCloseBtn" type="button" style="position:absolute; top:0; right:0; display:none;" aria-label="বন্ধ করুন">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
+    </button>
+    <div class="auth-brand">
+      <div class="ripple-ring" style="margin:0 auto;"><span></span><span></span><span></span></div>
+      <h1>প্রশান্তি</h1>
+      <p>আপনার মানসিক, শারীরিক ও আধ্যাত্মিক যত্নের সঙ্গী</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabRegister" type="button">অ্যাকাউন্ট সংরক্ষণ করুন</button>
+      <button class="auth-tab" id="tabLogin" type="button">আগের অ্যাকাউন্টে লগইন</button>
+    </div>
+
+    <!-- save / link current (anonymous) session to a username + password -->
+    <form id="registerForm">
+      <div class="field">
+        <label for="regName">আপনার নাম</label>
+        <input id="regName" type="text" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="regUsername">ইউজারনেম</label>
+        <input id="regUsername" type="text" autocomplete="username" required minlength="3">
+      </div>
+      <div class="field">
+        <label for="regPassword">পাসওয়ার্ড</label>
+        <input id="regPassword" type="password" autocomplete="new-password" minlength="6" required>
+      </div>
+      <button class="btn-primary" type="submit" id="registerBtn">সংরক্ষণ করুন</button>
+      <div class="auth-error" id="registerError"></div>
+    </form>
+
+    <!-- sign in to a previously-saved account (e.g. on a new device) -->
+    <form id="loginForm" style="display:none;">
+      <div class="field">
+        <label for="loginUsername">ইউজারনেম</label>
+        <input id="loginUsername" type="text" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="loginPassword">পাসওয়ার্ড</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn-primary" type="submit" id="loginBtn">লগইন করুন</button>
+      <div class="auth-error" id="loginError"></div>
+    </form>
+
+    <div class="auth-foot">কোনো ইমেইল লাগবে না — আপনার তথ্য সম্পূর্ণ সুরক্ষিত ও ব্যক্তিগত থাকবে</div>
+    <button type="button" class="auth-guest-link" id="guestSkipBtn">সাইনইন ছাড়াই ব্যবহার করুন (গেস্ট)</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP SHELL
+     ============================================================ -->
+<div id="appShell">
+
+  <header class="topbar">
+    <h2 id="screenHeading">হোম</h2>
+    <button class="icon-btn" id="openDrawerBtn" aria-label="মেনু খুলুন">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+  </header>
+
+  <main id="screenContainer">
+
+    <!-- HOME -->
+    <section class="screen active" data-screen="home">
+      <h1 class="screen-title" id="homeGreeting">শুভেচ্ছা</h1>
+      <p class="screen-sub">আজকের দিনটি আপনার জন্য শান্তিময় হোক</p>
+
+      <div class="card">
+        <p class="card-label">আজ আপনার মন কেমন?</p>
+        <div class="mood-row" id="moodRow">
+          <button class="mood-btn" data-mood="1" aria-label="খারাপ">😔</button>
+          <button class="mood-btn" data-mood="2" aria-label="মোটামুটি খারাপ">😕</button>
+          <button class="mood-btn" data-mood="3" aria-label="স্বাভাবিক">😐</button>
+          <button class="mood-btn" data-mood="4" aria-label="ভালো">🙂</button>
+          <button class="mood-btn" data-mood="5" aria-label="খুব ভালো">😄</button>
+        </div>
+        <div class="mood-note" id="moodNote"></div>
+      </div>
+
+      <div class="card">
+        <p class="card-label">পানি পান</p>
+        <div class="water-row">
+          <div class="water-count"><span id="waterCount">0</span> <span>/ ৮ গ্লাস</span></div>
+          <button class="btn-round" id="waterAddBtn" aria-label="পানি যোগ করুন">+</button>
+        </div>
+        <div class="water-drops" id="waterDrops"></div>
+      </div>
+
+      <div class="streak-pill" id="streakPill" style="display:none;">🔥 <span id="streakText"></span></div>
+    </section>
+
+    <!-- HEALTH HUB -->
+    <section class="screen" data-screen="health">
+      <h1 class="screen-title">স্বাস্থ্য</h1>
+      <p class="screen-sub">মানসিক, শারীরিক, আধ্যাত্মিক ও পুষ্টি বিষয়ক যত্ন</p>
+      <div class="pillar-grid">
+        <div class="pillar-card" data-open="physical-health">
+          <div class="pillar-icon">🩺</div>
+          <div class="pillar-name">শারীরিক স্বাস্থ্য</div>
+          <div class="pillar-sub">এনসাইক্লোপিডিয়া ও সাইকেল ট্র্যাকার</div>
+        </div>
+        <div class="pillar-card" data-open="mental-health">
+          <div class="pillar-icon">🌿</div>
+          <div class="pillar-name">মানসিক শান্তি</div>
+          <div class="pillar-sub">শীঘ্রই আসছে</div>
+        </div>
+        <div class="pillar-card" data-open="spiritual-peace">
+          <div class="pillar-icon">🕊️</div>
+          <div class="pillar-name">আধ্যাত্মিক প্রশান্তি</div>
+          <div class="pillar-sub">শীঘ্রই আসছে</div>
+        </div>
+        <div class="pillar-card" data-open="food-nutrition">
+          <div class="pillar-icon">🥗</div>
+          <div class="pillar-name">খাদ্য ও পুষ্টি</div>
+          <div class="pillar-sub">শীঘ্রই আসছে</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHYSICAL HEALTH -->
+    <section class="screen" data-screen="physical-health">
+      <button class="subscreen-back" data-back="health">← স্বাস্থ্য</button>
+      <h1 class="screen-title">শারীরিক স্বাস্থ্য</h1>
+      <p class="screen-sub">নিজের শরীর সম্পর্কে জানুন, যত্ন নিন</p>
+
+      <div class="card">
+        <p class="card-label">মাসিক চক্র ট্র্যাকার</p>
+        <div class="cycle-day-box">
+          <b id="cycleDayNum">—</b>
+          <span id="cycleDayLabel">এখনো কোনো তথ্য যোগ করা হয়নি</span>
+        </div>
+        <div class="cycle-field">
+          <label for="cycleLastDate">শেষ মাসিক শুরুর তারিখ</label>
+          <input type="date" id="cycleLastDate">
+        </div>
+        <div class="cycle-field">
+          <label for="cycleLength">গড় চক্রের দৈর্ঘ্য (দিন)</label>
+          <input type="number" id="cycleLength" min="18" max="45" placeholder="২৮">
+        </div>
+        <div class="cycle-predict" id="cyclePredictBox" style="display:none;">
+          <div>পরবর্তী সম্ভাব্য মাসিক<b id="cycleNextDate">—</b></div>
+          <div>উর্বর সময়কাল<b id="cycleFertileWindow">—</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-label">পানি পান</p>
+        <div class="shortcut-row">
+          <span style="font-size:13px; color:var(--ink-soft);">হোম ট্যাব থেকে দৈনিক পানি পানের হিসাব রাখুন</span>
+          <button data-back="home">দেখুন</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-label">নারী স্বাস্থ্য এনসাইক্লোপিডিয়া</p>
+        <div id="encyclopediaList"></div>
+      </div>
+    </section>
+
+    <!-- MENTAL HEALTH (placeholder, next module) -->
+    <section class="screen" data-screen="mental-health">
+      <button class="subscreen-back" data-back="health">← স্বাস্থ্য</button>
+      <h1 class="screen-title">মানসিক শান্তি</h1>
+      <div class="card placeholder-card">এই অংশ পরবর্তী ধাপে তৈরি হবে</div>
+    </section>
+
+    <!-- SPIRITUAL PEACE (placeholder) -->
+    <section class="screen" data-screen="spiritual-peace">
+      <button class="subscreen-back" data-back="health">← স্বাস্থ্য</button>
+      <h1 class="screen-title">আধ্যাত্মিক প্রশান্তি</h1>
+      <div class="card placeholder-card">এই অংশ পরবর্তী ধাপে তৈরি হবে</div>
+    </section>
+
+    <!-- FOOD & NUTRITION (placeholder) -->
+    <section class="screen" data-screen="food-nutrition">
+      <button class="subscreen-back" data-back="health">← স্বাস্থ্য</button>
+      <h1 class="screen-title">খাদ্য ও পুষ্টি</h1>
+      <div class="card placeholder-card">এই অংশ পরবর্তী ধাপে তৈরি হবে</div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="screen" data-screen="analytics">
+      <h1 class="screen-title">অ্যানালিটিক্স</h1>
+      <p class="screen-sub">আপনার সামগ্রিক অগ্রগতি একনজরে</p>
+
+      <div class="card">
+        <p class="card-label">আজকের পানি লক্ষ্যমাত্রা</p>
+        <div class="ring-gauge" id="waterRing" style="--pct:0;">
+          <div class="ring-gauge-inner"><b id="waterRingText">0/৮</b><span>গ্লাস</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-label">গত ৭ দিনের মুড ধারা</p>
+        <div class="week-bars" id="moodWeekBars"></div>
+      </div>
+
+      <div class="card">
+        <p class="card-label">ধারাবাহিকতা</p>
+        <div id="analyticsStreakText" style="font-size:14px; color:var(--ink-soft);">এখনো কোনো তথ্য নেই</div>
+      </div>
+    </section>
+
+    <!-- LEARNING -->
+    <section class="screen" data-screen="learning">
+      <h1 class="screen-title">শিক্ষা</h1>
+      <p class="screen-sub">ধাপে ধাপে শেখার পরিবেশ</p>
+      <div class="card placeholder-card">এই অংশ পরবর্তী ধাপে তৈরি হবে</div>
+    </section>
+
+    <!-- COMMUNITY -->
+    <section class="screen" data-screen="community">
+      <h1 class="screen-title">কমিউনিটি</h1>
+      <p class="screen-sub">নিরাপদ ও সহায়ক সংযোগ</p>
+      <div class="card placeholder-card">এই অংশ সবার শেষে তৈরি হবে</div>
+    </section>
+
+    <!-- ADMIN (hidden unless isAdmin) -->
+    <section class="screen" data-screen="admin">
+      <h1 class="screen-title">অ্যাডমিন প্যানেল</h1>
+      <p class="screen-sub">কনটেন্ট ব্যবস্থাপনা</p>
+      <div class="card placeholder-card">এই অংশ পরবর্তী ধাপে তৈরি হবে</div>
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" data-target="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      হোম
+    </button>
+    <button class="nav-item" data-target="health">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      স্বাস্থ্য
+    </button>
+    <button class="nav-item" data-target="analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      অ্যানালিটিক্স
+    </button>
+    <button class="nav-item" data-target="learning">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      শিক্ষা
+    </button>
+    <button class="nav-item" data-target="community">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      কমিউনিটি
+    </button>
+  </nav>
+
+</div>
+
+<!-- ============================================================
+     DRAWER
+     ============================================================ -->
+<div id="drawerOverlay"></div>
+<aside id="drawer">
+  <div class="drawer-profile">
+    <div class="drawer-avatar" id="drawerInitial">?</div>
+    <div>
+      <div class="drawer-name" id="drawerName">—</div>
+      <div class="drawer-email" id="drawerEmail">—</div>
+    </div>
+  </div>
+
+  <div class="drawer-row" id="saveAccountRow" style="display:none;">
+    <span>অ্যাকাউন্ট সংরক্ষণ করুন</span>
+    <span>›</span>
+  </div>
+  <div class="drawer-row">
+    <span>ডার্ক মোড</span>
+    <button class="toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন"></button>
+  </div>
+  <div class="drawer-row" id="adminMenuRow" style="display:none;">
+    <span>অ্যাডমিন প্যানেল</span>
+    <span>›</span>
+  </div>
+  <div class="drawer-row">
+    <span>প্রোফাইল সেটিংস</span>
+    <span>›</span>
+  </div>
+
+  <div class="drawer-spacer"></div>
+  <button class="btn-signout" id="signOutBtn">সাইন আউট</button>
+</aside>
+
+<!-- ============================================================
+     FIREBASE + APP LOGIC
+     ============================================================ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword,
+    createUserWithEmailAndPassword, linkWithCredential, EmailAuthProvider,
+    signOut, updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  /* ----------------------------------------------------------
+     TODO (Bnbn): paste your real Firebase config below.
+     Firebase Console → Project settings → General → Your apps → SDK setup and config
+     ---------------------------------------------------------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyAC4fjZtoeO4cMzkUC1hdUt_w934z6DUek",
+    authDomain: "woman-life-3a1b9.firebaseapp.com",
+    projectId: "woman-life-3a1b9",
+    storageBucket: "woman-life-3a1b9.firebasestorage.app",
+    messagingSenderId: "7227325371",
+    appId: "1:7227325371:web:348901711edbc8aa6ca29e"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const auth = getAuth(fbApp);
+  const db = getFirestore(fbApp);
+
+  function showSplashError(msg){
+    const el = document.getElementById('splashError');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  /* ---------------- THEME ---------------- */
+  const root = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  function applyTheme(t){
+    if(t === 'dark'){ root.setAttribute('data-theme','dark'); themeToggle.classList.add('on'); }
+    else { root.removeAttribute('data-theme'); themeToggle.classList.remove('on'); }
+    localStorage.setItem('theme', t);
+  }
+  const savedTheme = localStorage.getItem('theme')
+    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  applyTheme(savedTheme);
+  themeToggle.addEventListener('click', () => {
+    applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ---------------- AUTH UI ---------------- */
+  const authScreen = document.getElementById('authScreen');
+  const appShell = document.getElementById('appShell');
+  const splash = document.getElementById('splash');
+  const authCloseBtn = document.getElementById('authCloseBtn');
+
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+
+  tabLogin.addEventListener('click', () => {
+    tabLogin.classList.add('active'); tabRegister.classList.remove('active');
+    loginForm.style.display='block'; registerForm.style.display='none';
+  });
+  tabRegister.addEventListener('click', () => {
+    tabRegister.classList.add('active'); tabLogin.classList.remove('active');
+    registerForm.style.display='block'; loginForm.style.display='none';
+  });
+
+  // authScreen is no longer a mandatory gate — it's opened on demand
+  // (save account / log into an existing saved account).
+  function openAuthScreen(mode){
+    authScreen.classList.add('visible');
+    authCloseBtn.style.display = appShell.classList.contains('visible') ? 'flex' : 'none';
+    if(mode === 'login'){ tabLogin.click(); } else { tabRegister.click(); }
+  }
+  function closeAuthScreen(){
+    authScreen.classList.remove('visible');
+  }
+  authCloseBtn.addEventListener('click', closeAuthScreen);
+
+  document.getElementById('guestSkipBtn').addEventListener('click', async () => {
+    // anonymous session already exists in the background in almost all cases —
+    // this just dismisses the screen. Only if it somehow doesn't exist yet
+    // (e.g. very first launch, still resolving) do we kick it off here.
+    if(!auth.currentUser){
+      try{ await signInAnonymously(auth); }catch(e){ console.error('Anonymous sign-in failed:', e); showSplashError('সমস্যা হয়েছে: ' + (e && e.code ? e.code : 'unknown')); }
+    }
+    closeAuthScreen();
+  });
+
+  /* username helpers — Firebase Auth needs an email under the hood,
+     so a username is mapped to a deterministic, never-shown fake one. */
+  function normalizeUsername(raw){
+    return (raw || '').trim().toLowerCase().replace(/[^a-z0-9_.]/g, '');
+  }
+  function usernameToEmail(username){
+    return `${username}@prashanti.local`;
+  }
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+    btn.disabled = true;
+    try{
+      const username = normalizeUsername(loginUsername.value);
+      // NOTE: this switches to a different permanent account. If the current
+      // session is still an unsaved guest, its local data is left behind —
+      // that's expected when moving to an already-saved account.
+      await signInWithEmailAndPassword(auth, usernameToEmail(username), loginPassword.value);
+      closeAuthScreen();
+    }catch(err){
+      errEl.textContent = friendlyAuthError(err.code);
+    }finally{ btn.disabled = false; }
+  });
+
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('registerBtn');
+    const errEl = document.getElementById('registerError');
+    errEl.textContent = '';
+    btn.disabled = true;
+    try{
+      const name = regName.value.trim();
+      const username = normalizeUsername(regUsername.value);
+      const password = regPassword.value;
+      if(username.length < 3) throw { code: 'custom/short-username' };
+
+      // username doubles as its own uniqueness reservation
+      const unameRef = doc(db, 'usernames', username);
+      const taken = await getDoc(unameRef);
+      if(taken.exists()) throw { code: 'custom/username-taken' };
+
+      const credential = EmailAuthProvider.credential(usernameToEmail(username), password);
+      const current = auth.currentUser;
+
+      if(current && current.isAnonymous){
+        // upgrade the guest session in place — same UID, all existing data kept
+        const result = await linkWithCredential(current, credential);
+        await updateProfile(result.user, { displayName: name });
+      } else {
+        // fallback: no anonymous session present for some reason
+        const cred = await createUserWithEmailAndPassword(auth, usernameToEmail(username), password);
+        await updateProfile(cred.user, { displayName: name });
+      }
+
+      // isAdmin is NEVER set from the client; only via Firestore console / trusted admin flow.
+      await setDoc(unameRef, { uid: auth.currentUser.uid });
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
+        name, username,
+        createdAt: serverTimestamp(),
+        spiritualPath: null   // set during onboarding: "islamic" | "sanatan"
+      }, { merge: true });
+
+      closeAuthScreen();
+    }catch(err){
+      errEl.textContent = friendlyAuthError(err.code);
+    }finally{ btn.disabled = false; }
+  });
+
+  document.getElementById('saveAccountRow').addEventListener('click', () => {
+    closeDrawer(); openAuthScreen('register');
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', () => {
+    if(auth.currentUser && auth.currentUser.isAnonymous){
+      const ok = confirm('আপনি এখনো অ্যাকাউন্ট সংরক্ষণ করেননি। সাইন আউট করলে এই ডিভাইসের সব তথ্য হারিয়ে যেতে পারে। তবুও সাইন আউট করবেন?');
+      if(!ok) return;
+    }
+    signOut(auth);
+  });
+
+  function friendlyAuthError(code){
+    const map = {
+      'auth/invalid-email': 'ইউজারনেমটি সঠিক নয়',
+      'auth/user-not-found': 'এই ইউজারনেমে কোনো অ্যাকাউন্ট পাওয়া যায়নি',
+      'auth/wrong-password': 'পাসওয়ার্ড সঠিক নয়',
+      'auth/invalid-credential': 'ইউজারনেম বা পাসওয়ার্ড সঠিক নয়',
+      'auth/email-already-in-use': 'এই ইউজারনেমটি আগে থেকেই ব্যবহার হচ্ছে',
+      'auth/credential-already-in-use': 'এই ইউজারনেমটি আগে থেকেই ব্যবহার হচ্ছে',
+      'auth/weak-password': 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে',
+      'custom/username-taken': 'এই ইউজারনেমটি আগে থেকেই নেওয়া হয়েছে',
+      'custom/short-username': 'ইউজারনেম কমপক্ষে ৩ অক্ষরের হতে হবে'
+    };
+    return map[code] || 'কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন';
+  }
+
+  /* ---------------- AUTH STATE ---------------- */
+  onAuthStateChanged(auth, async (user) => {
+    if(!user){
+      // no session at all (first launch, or just signed out) — start a
+      // silent guest session. No form, no typing, app opens instantly.
+      try{ await signInAnonymously(auth); }
+      catch(e){
+        console.error('Anonymous sign-in failed:', e);
+        splash.style.display = 'flex';
+        showSplashError('অ্যাপ চালু করা যায়নি — Firebase কনফিগারেশন চেক করুন (config এখনো বসানো হয়নি, অথবা Anonymous sign-in চালু করা নেই)। কোড: ' + (e && e.code ? e.code : 'unknown'));
+      }
+      return; // onAuthStateChanged fires again once the guest session exists
+    }
+
+    splash.style.display = 'none';
+    closeAuthScreen();
+    appShell.classList.add('visible');
+
+    let profile = {};
+    try{
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      profile = snap.exists() ? snap.data() : {};
+    }catch(e){ /* offline or rules issue — fail quiet */ }
+
+    const displayName = profile.name || user.displayName;
+    document.getElementById('drawerName').textContent = displayName || 'অতিথি ব্যবহারকারী';
+    document.getElementById('drawerEmail').textContent = profile.username ? '@' + profile.username : 'গেস্ট হিসেবে ব্যবহার হচ্ছে';
+    document.getElementById('drawerInitial').textContent = (displayName || 'অ')[0];
+
+    document.getElementById('adminMenuRow').style.display = profile.isAdmin ? 'flex' : 'none';
+    document.getElementById('saveAccountRow').style.display = user.isAnonymous ? 'flex' : 'none';
+
+    currentUid = user.uid;
+    updateGreeting(displayName);
+    renderHome();
+    renderAnalytics();
+  });
+
+  /* ============================================================
+     HEALTH DATA — local-first storage
+     Raw day-to-day entries (mood, water, cycle, meals, etc.) live in
+     localStorage only — private to this device, never sent anywhere.
+     Only small daily AGGREGATES (today's mood, water count, streak)
+     are mirrored to Firestore under users/{uid}.summary, so the
+     Analytics roll-up + admin view can see progress without ever
+     touching the raw personal entries. See data-policy note in the
+     Firestore rules file for the full local-vs-cloud split.
+     ============================================================ */
+  let currentUid = null;
+  const WATER_GOAL = 8;
+
+  function lsKey(){ return `prashanti_health_${currentUid}`; }
+  function loadLocal(){
+    try{ return JSON.parse(localStorage.getItem(lsKey())) || {}; }
+    catch(e){ return {}; }
+  }
+  function saveLocal(data){
+    try{ localStorage.setItem(lsKey(), JSON.stringify(data)); }
+    catch(e){ console.error('local save failed:', e); }
+  }
+  function todayKey(){ return new Date().toISOString().slice(0,10); }
+  function dateKeyOffset(daysAgo){
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    return d.toISOString().slice(0,10);
+  }
+  function computeMoodStreak(data){
+    const mood = data.mood || {};
+    let streak = 0;
+    for(let i = 0; i < 365; i++){
+      if(mood[dateKeyOffset(i)] != null) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  function updateGreeting(name){
+    const h = new Date().getHours();
+    const part = h < 11 ? 'সুপ্রভাত' : h < 15 ? 'শুভ দুপুর' : h < 18 ? 'শুভ বিকাল' : 'শুভ সন্ধ্যা';
+    document.getElementById('homeGreeting').textContent = name ? `${part}, ${name}` : part;
+  }
+
+  function renderHome(){
+    if(!currentUid) return;
+    const data = loadLocal();
+    const t = todayKey();
+    const todayMood = (data.mood || {})[t];
+    document.querySelectorAll('.mood-btn').forEach(btn => {
+      btn.classList.toggle('selected', Number(btn.dataset.mood) === todayMood);
+    });
+    const moodLabels = {1:'কষ্টের একটা দিন। নিজের প্রতি সদয় থাকুন।', 2:'একটু কঠিন দিন যাচ্ছে বোঝা যাচ্ছে।', 3:'একটা সাধারণ দিন।', 4:'ভালো একটা দিন যাচ্ছে!', 5:'চমৎকার! এই অনুভূতি ধরে রাখুন।'};
+    document.getElementById('moodNote').textContent = todayMood ? (moodLabels[todayMood] || '') : '';
+
+    const waterCount = (data.water || {})[t] || 0;
+    document.getElementById('waterCount').textContent = waterCount;
+    const drops = document.getElementById('waterDrops');
+    drops.innerHTML = '';
+    for(let i = 0; i < WATER_GOAL; i++){
+      const d = document.createElement('div');
+      d.className = 'water-drop' + (i < waterCount ? ' filled' : '');
+      drops.appendChild(d);
+    }
+
+    const streak = computeMoodStreak(data);
+    const streakPill = document.getElementById('streakPill');
+    if(streak > 0){
+      streakPill.style.display = 'inline-flex';
+      document.getElementById('streakText').textContent = `${streak} দিনের ধারাবাহিক চেক-ইন`;
+    } else {
+      streakPill.style.display = 'none';
+    }
+  }
+
+  function renderAnalytics(){
+    if(!currentUid) return;
+    const data = loadLocal();
+    const t = todayKey();
+    const waterCount = (data.water || {})[t] || 0;
+    const pct = Math.min(100, Math.round((waterCount / WATER_GOAL) * 100));
+    document.getElementById('waterRing').style.setProperty('--pct', pct);
+    document.getElementById('waterRingText').textContent = `${waterCount}/৮`;
+
+    const weekBars = document.getElementById('moodWeekBars');
+    weekBars.innerHTML = '';
+    const dayLabels = ['র','শ','শু','বৃ','বু','ম','র'];
+    for(let i = 6; i >= 0; i--){
+      const key = dateKeyOffset(i);
+      const mood = (data.mood || {})[key];
+      const col = document.createElement('div');
+      col.className = 'week-bar-col';
+      const bar = document.createElement('div');
+      const heightPct = mood ? (mood / 5) * 100 : 6;
+      bar.className = 'week-bar' + (mood ? ' has-entry' : '');
+      bar.style.height = heightPct + '%';
+      const label = document.createElement('div');
+      label.className = 'week-bar-label';
+      label.textContent = dayLabels[6 - i];
+      col.appendChild(bar); col.appendChild(label);
+      weekBars.appendChild(col);
+    }
+
+    const streak = computeMoodStreak(data);
+    document.getElementById('analyticsStreakText').textContent =
+      streak > 0 ? `${streak} দিন ধরে প্রতিদিন চেক-ইন করছেন — চালিয়ে যান!` : 'আজই প্রথম চেক-ইন করুন, ধারাবাহিকতা এখান থেকে শুরু হবে।';
+  }
+
+  async function syncSummaryToCloud(){
+    if(!auth.currentUser) return;
+    const data = loadLocal();
+    const t = todayKey();
+    try{
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
+        summary: {
+          todayMood: (data.mood || {})[t] ?? null,
+          todayWater: (data.water || {})[t] || 0,
+          moodStreak: computeMoodStreak(data),
+          updatedAt: serverTimestamp()
+        }
+      }, { merge: true });
+    }catch(e){ console.error('cloud summary sync failed (non-fatal, kept locally):', e); }
+  }
+
+  document.getElementById('moodRow').addEventListener('click', (e) => {
+    const btn = e.target.closest('.mood-btn');
+    if(!btn) return;
+    const data = loadLocal();
+    data.mood = data.mood || {};
+    data.mood[todayKey()] = Number(btn.dataset.mood);
+    saveLocal(data);
+    renderHome(); renderAnalytics(); syncSummaryToCloud();
+  });
+
+  document.getElementById('waterAddBtn').addEventListener('click', () => {
+    const data = loadLocal();
+    data.water = data.water || {};
+    const t = todayKey();
+    data.water[t] = Math.min(WATER_GOAL, (data.water[t] || 0) + 1);
+    saveLocal(data);
+    renderHome(); renderAnalytics(); syncSummaryToCloud();
+  });
+
+  /* ============================================================
+     PHYSICAL HEALTH — encyclopedia + cycle tracker
+     Cycle data (last period date, cycle length) is raw personal
+     health data — stored locally only, same as mood/water.
+     ============================================================ */
+  const ENCYCLOPEDIA_TOPICS = [
+    { t:'মাসিক চক্র কী ও কেন হয়', b:'মাসিক চক্র একটি স্বাভাবিক শারীরবৃত্তীয় প্রক্রিয়া, সাধারণত ২১-৩৫ দিন পরপর ঘটে। এটি শরীরের হরমোন পরিবর্তনের ফল এবং প্রজনন স্বাস্থ্যের একটি স্বাভাবিক অংশ। চক্র কিছুটা এদিক-ওদিক হওয়া স্বাভাবিক, তবে খুব অনিয়মিত হলে ডাক্তারের পরামর্শ নেওয়া ভালো।' },
+    { t:'পিরিয়ডের সময় সাধারণ যত্ন', b:'পর্যাপ্ত বিশ্রাম নিন, পরিষ্কার প্যাড বা কাপড় নিয়মিত পরিবর্তন করুন, হালকা ব্যায়াম ও পর্যাপ্ত পানি পান ব্যথা কমাতে সাহায্য করতে পারে। প্রচণ্ড ব্যথা বা অতিরিক্ত রক্তক্ষরণ হলে অবহেলা না করে স্বাস্থ্যকর্মীর পরামর্শ নিন।' },
+    { t:'স্বাস্থ্যকর হাইড্রেশন', b:'দৈনিক প্রায় ৮ গ্লাস (২-২.৫ লিটার) পানি পান করা শরীরের স্বাভাবিক কার্যক্রম, ত্বকের স্বাস্থ্য ও শক্তি ধরে রাখতে সাহায্য করে। গরম আবহাওয়া বা পিরিয়ডের সময় প্রয়োজন কিছুটা বাড়তে পারে।' },
+    { t:'কখন ডাক্তার দেখানো উচিত', b:'যদি মাসিক তিন মাসের বেশি অনুপস্থিত থাকে, অস্বাভাবিক ব্যথা, অতিরিক্ত রক্তক্ষরণ, বা চক্রে বড় পরিবর্তন দেখা দেয়, তাহলে একজন স্বাস্থ্যকর্মী বা গাইনোকোলজিস্টের সাথে কথা বলা উচিত। নিজে থেকে কোনো ওষুধ শুরু করার আগে পরামর্শ নেওয়া নিরাপদ।' },
+    { t:'সাধারণ ভুল ধারণা দূর করা', b:'পিরিয়ডের সময় গোসল করা, নামাজ বা ধর্মীয় বিষয়ে জিজ্ঞাসা থাকলে নিজ ধর্মীয় নির্দেশনা অনুসরণ করাই ভালো, কিন্তু শারীরিকভাবে গোসল, স্বাভাবিক কাজকর্ম করা সম্পূর্ণ নিরাপদ ও স্বাস্থ্যসম্মত। ভয় বা লজ্জার কিছু নেই।' }
+  ];
+
+  function renderEncyclopedia(){
+    const list = document.getElementById('encyclopediaList');
+    if(!list || list.dataset.rendered) return;
+    list.dataset.rendered = '1';
+    ENCYCLOPEDIA_TOPICS.forEach((topic, i) => {
+      const item = document.createElement('div');
+      item.className = 'accordion-item';
+      item.innerHTML = `
+        <button class="accordion-head" type="button">
+          <span>${topic.t}</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="accordion-body"><p>${topic.b}</p></div>`;
+      item.querySelector('.accordion-head').addEventListener('click', () => {
+        item.classList.toggle('open');
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function loadCycleUI(){
+    const data = loadLocal();
+    const cycle = data.cycle || {};
+    if(cycle.lastDate) document.getElementById('cycleLastDate').value = cycle.lastDate;
+    if(cycle.length) document.getElementById('cycleLength').value = cycle.length;
+    renderCycleStatus();
+  }
+
+  function renderCycleStatus(){
+    const data = loadLocal();
+    const cycle = data.cycle || {};
+    const dayNumEl = document.getElementById('cycleDayNum');
+    const dayLabelEl = document.getElementById('cycleDayLabel');
+    const predictBox = document.getElementById('cyclePredictBox');
+
+    if(!cycle.lastDate){
+      dayNumEl.textContent = '—';
+      dayLabelEl.textContent = 'এখনো কোনো তথ্য যোগ করা হয়নি';
+      predictBox.style.display = 'none';
+      return;
+    }
+
+    const length = cycle.length && cycle.length >= 18 && cycle.length <= 45 ? cycle.length : 28;
+    const last = new Date(cycle.lastDate + 'T00:00:00');
+    const now = new Date(); now.setHours(0,0,0,0);
+    const msPerDay = 86400000;
+    let dayNum = Math.floor((now - last) / msPerDay) + 1;
+    if(dayNum < 1) dayNum = 1;
+    const cycleDayShown = ((dayNum - 1) % length) + 1;
+
+    dayNumEl.textContent = cycleDayShown;
+    dayLabelEl.textContent = `চক্রের ${cycleDayShown} নম্বর দিন`;
+
+    const next = new Date(last.getTime() + length * msPerDay);
+    const fertileStart = new Date(next.getTime() - 16 * msPerDay);
+    const fertileEnd = new Date(next.getTime() - 12 * msPerDay);
+    const fmt = (d) => d.toLocaleDateString('bn-BD', { day:'numeric', month:'short' });
+
+    document.getElementById('cycleNextDate').textContent = fmt(next);
+    document.getElementById('cycleFertileWindow').textContent = `${fmt(fertileStart)} - ${fmt(fertileEnd)}`;
+    predictBox.style.display = 'flex';
+  }
+
+  function saveCycleField(field, value){
+    const data = loadLocal();
+    data.cycle = data.cycle || {};
+    data.cycle[field] = value;
+    saveLocal(data);
+    renderCycleStatus();
+  }
+  document.getElementById('cycleLastDate').addEventListener('change', (e) => saveCycleField('lastDate', e.target.value));
+  document.getElementById('cycleLength').addEventListener('change', (e) => {
+    const v = Number(e.target.value);
+    if(v) saveCycleField('length', v);
+  });
+
+  // hook into the pillar-card open so Physical Health renders on first visit
+  document.querySelector('[data-open="physical-health"]').addEventListener('click', () => {
+    renderEncyclopedia();
+    loadCycleUI();
+  });
+
+  /* ---------------- TAB NAVIGATION ---------------- */
+  const navItems = document.querySelectorAll('.nav-item');
+  const screens = document.querySelectorAll('.screen');
+  const heading = document.getElementById('screenHeading');
+  const headingMap = {
+    home:'হোম', health:'স্বাস্থ্য', analytics:'অ্যানালিটিক্স',
+    learning:'শিক্ষা', community:'কমিউনিটি', admin:'অ্যাডমিন প্যানেল',
+    'physical-health':'শারীরিক স্বাস্থ্য', 'mental-health':'মানসিক শান্তি',
+    'spiritual-peace':'আধ্যাত্মিক প্রশান্তি', 'food-nutrition':'খাদ্য ও পুষ্টি'
+  };
+
+  function goToScreen(target){
+    screens.forEach(s => s.classList.toggle('active', s.dataset.screen === target));
+    const navTarget = ['physical-health','mental-health','spiritual-peace','food-nutrition'].includes(target) ? 'health' : target;
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.target === navTarget));
+    heading.textContent = headingMap[target] || '';
+    document.getElementById('screenContainer').scrollTo({top:0});
+  }
+  navItems.forEach(btn => btn.addEventListener('click', () => goToScreen(btn.dataset.target)));
+
+  document.querySelectorAll('[data-open]').forEach(card => {
+    card.addEventListener('click', () => goToScreen(card.dataset.open));
+  });
+  document.querySelectorAll('[data-back]').forEach(btn => {
+    btn.addEventListener('click', () => goToScreen(btn.dataset.back));
+  });
+
+  /* ---------------- DRAWER ---------------- */
+  const drawer = document.getElementById('drawer');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+  function openDrawer(){ drawer.classList.add('visible'); drawerOverlay.classList.add('visible'); }
+  function closeDrawer(){ drawer.classList.remove('visible'); drawerOverlay.classList.remove('visible'); }
+  document.getElementById('openDrawerBtn').addEventListener('click', openDrawer);
+  drawerOverlay.addEventListener('click', closeDrawer);
+
+  document.getElementById('adminMenuRow').addEventListener('click', () => { closeDrawer(); goToScreen('admin'); });
+</script>
+</body>
+</html>
