@@ -750,7 +750,7 @@
   import {
     getAuth, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword,
     createUserWithEmailAndPassword, linkWithCredential, EmailAuthProvider,
-    signOut, updateProfile
+    signOut, updateProfile, deleteUser
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, serverTimestamp
@@ -871,34 +871,37 @@
     errEl.textContent = '';
     btn.disabled = true;
     try{
-      // Firestore rules require an authenticated request. Since guest
-      // sessions are no longer started automatically on load, make sure
-      // *some* session exists before the uniqueness check below runs.
-      if(!auth.currentUser){
-        await signInAnonymously(auth);
-      }
-
+      // Firestore rules require an authenticated request to even check
+      // username availability. Rather than depending on anonymous
+      // sign-in being enabled (a separate Firebase Console setting),
+      // create/link the real account FIRST — that always works — then
+      // verify the username afterward and roll back if it's taken.
       const name = regName.value.trim();
       const username = normalizeUsername(regUsername.value);
       const password = regPassword.value;
       if(username.length < 3) throw { code: 'custom/short-username' };
 
-      // username doubles as its own uniqueness reservation
-      const unameRef = doc(db, 'usernames', username);
-      const taken = await getDoc(unameRef);
-      if(taken.exists()) throw { code: 'custom/username-taken' };
-
       const credential = EmailAuthProvider.credential(usernameToEmail(username), password);
-      const current = auth.currentUser;
+      const before = auth.currentUser;
 
-      if(current && current.isAnonymous){
+      if(before && before.isAnonymous){
         // upgrade the guest session in place — same UID, all existing data kept
-        const result = await linkWithCredential(current, credential);
+        const result = await linkWithCredential(before, credential);
         await updateProfile(result.user, { displayName: name });
       } else {
-        // fallback: no anonymous session present for some reason
         const cred = await createUserWithEmailAndPassword(auth, usernameToEmail(username), password);
         await updateProfile(cred.user, { displayName: name });
+      }
+
+      // Now we have a real signed-in session — safe to touch Firestore.
+      const unameRef = doc(db, 'usernames', username);
+      const taken = await getDoc(unameRef);
+      if(taken.exists()){
+        // roll back the auth account we just created/linked so the person
+        // can try again with a different username
+        try{ await deleteUser(auth.currentUser); }
+        catch(rollbackErr){ console.warn('Could not roll back account after username collision:', rollbackErr); }
+        throw { code: 'custom/username-taken' };
       }
 
       // isAdmin is NEVER set from the client; only via Firestore console / trusted admin flow.
@@ -939,7 +942,8 @@
       'auth/weak-password': 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে',
       'custom/username-taken': 'এই ইউজারনেমটি আগে থেকেই নেওয়া হয়েছে',
       'custom/short-username': 'ইউজারনেম কমপক্ষে ৩ অক্ষরের হতে হবে',
-      'permission-denied': 'Firestore নিয়মের কারণে অনুমতি পাওয়া যায়নি — Firestore Rules চেক করুন'
+      'permission-denied': 'Firestore নিয়মের কারণে অনুমতি পাওয়া যায়নি — Firestore Rules চেক করুন',
+      'auth/operation-not-allowed': 'এই সাইন-ইন পদ্ধতি এখনো চালু করা হয়নি — Firebase Console চেক করুন'
     };
     return map[code] || 'কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন';
   }
@@ -947,11 +951,14 @@
   /* ---------------- AUTH STATE ---------------- */
   onAuthStateChanged(auth, async (user) => {
     if(!user){
-      // no session at all (first launch, or just signed out) — show the
-      // sign-in screen and let the person choose: log in, register, or
-      // continue as guest (guestSkipBtn starts the anonymous session).
+      // no session at all (first launch, just signed out, or a rolled-back
+      // registration attempt) — show the sign-in screen. If it's already
+      // open (e.g. user is mid-registration and we just rolled back a
+      // username collision), leave it as-is so their error message stays visible.
       splash.style.display = 'none';
-      openAuthScreen('login');
+      if(!authScreen.classList.contains('visible')){
+        openAuthScreen('login');
+      }
       return; // onAuthStateChanged fires again once a session (guest or real) exists
     }
 
